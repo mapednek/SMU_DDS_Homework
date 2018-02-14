@@ -1,0 +1,81 @@
+---
+title: "Unit 5: Tidy Data"
+author: "Manisha Pendekar"
+date: "February 13, 2018"
+output: html_document
+---
+#1. Data Munging 
+a. Read the yob2016.txt and set column names
+```{r echo=TRUE}
+#########Q1a
+df <- read.table(file = "C:\\Manisha\\DDS\\Week 5\\Class5Documents\\yob2016.txt", header = FALSE, sep = ";")
+#dim(df)
+head(df)
+#str(df)
+names(df) <-  c("Name", "Gender", "CountName")
+```
+b. Summary and Structure of df
+```{r echo=TRUE}
+str(df)
+summary(df)
+```
+c. Display the misspelled record
+```{r echo=TRUE}
+df[grep("yyy$",df$Name),]
+```
+d. Remove the misspelled record and save the cleaned dataset in y2016
+```{r echo=TRUE}
+y2016 <- df[-grep("yyy$",df$Name),]
+```
+#2. Data Merging
+a. Read the yob2015.txt and set column names
+```{r echo=TRUE}
+y2015 <- read.table(file = "C:\\Manisha\\DDS\\Week 5\\Class5Documents\\yob2015.txt", header = FALSE, sep = ",")
+names(y2015) <-  c("Name", "Gender", "CountName")
+```
+b. Display the last ten rows in the dataframe.  Describe something you find interesting about these 10 rows
+* The last 10 rows of this dataset have baby names which start with Z in 
+alphabetically sorted order. These last 10 records shows the names given to baby-boys 
+with each count of 5.
+```{r echo=TRUE}
+tail(y2015, 10)
+#The last 10 rows of this dataset have baby names which start with Z in 
+#alphabetically sorted order. These last 10 records shows the names given to #baby-boys with each count of 5.
+```
+c. Merge y2016 and y2015 and create a column final. There are no NA values in either of your amount of children rows after merging.
+```{r echo=TRUE}
+final <- merge(y2015, y2016, by = "Name")
+### The following code will check whether there are any NA (na.fail returns the object
+#if it does not contain any missing values, and signals an error otherwise.)
+naCount <- na.fail(final$CountName.x)
+naCount <- na.fail(final$CountName.y)
+
+#head(final)
+```
+#3. Data Summary
+a. Column Total which contains the amount of children in 2015 and 2016 together.  
+```{r echo=TRUE}
+final$Total<- rowSums(final[, c(3, 5)])
+```
+* In those two years combined, how many people were given popular names?
+```{r echo=TRUE}
+###In those two years combined, how many people were given popular names?
+sum(final$Total)
+```
+b. Sort the data by Total.  What are the top 10 most popular names?
+```{r echo=TRUE}
+sortedFinal <-final[order(final$Total),]
+tail(sortedFinal[[1]], 10)
+```
+c. Top 10 most popular girl names
+```{r echo=TRUE}
+girlNames <- final[final$Gender.y == "F",]
+girlNames <- girlNames[order(girlNames$Total),]
+top10girlNames <- tail(girlNames, 10)
+top10girlNames[,1]
+```
+d. Write the Top 10 most popular girl names to .csv file with Totals
+```{r echo=TRUE}
+write.csv(top10girlNames[,c("Name","Total")], file="C:\\Manisha\\DDS\\top10girlNames.csv",row.names=FALSE)
+```
+4. Github Link
