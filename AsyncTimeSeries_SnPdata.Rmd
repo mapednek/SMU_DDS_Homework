@@ -1,0 +1,50 @@
+---
+title: "TimeSeriesAsync_SnPdata"
+author: "Manisha Pendekar"
+date: "March 28, 2018"
+output: html_document
+---
+#Load library
+```{r echo=TRUE}
+library(tseries)
+```
+# Declare functions
+```{r echo=TRUE}
+Vol <- function(d, logrets) {
+  var = 0
+  lam = 0
+  varlist <- c()
+  for (r in logrets) {
+    lam = lam*(1-1/d) + 1
+    var = (1-1/lam)*var + (1/lam)*r^2
+    varlist <- c(varlist, var)
+  }
+  sqrt(varlist)
+}
+
+```
+# Get SNP data
+```{r echo=TRUE}
+SNPdata <- get.hist.quote('^gspc',quote="Close")
+```
+
+# Return
+```{r echo=TRUE}
+SNPret <- log(lag(SNPdata) - log(SNPdata))
+```
+# Volatility
+```{r echo=TRUE}
+SNPvol <-  sd(SNPret) * sqrt(250) * 100
+```
+# Weighted results
+```{r echo=TRUE}
+volest <- Vol(10, SNPret)
+volest2 <- Vol(30, SNPret)
+volest3 <- Vol(100, SNPret)
+```
+# Plot
+```{r echo=TRUE}
+plot(volest, type="l")
+lines(volest2, type="l", col="red")
+lines(volest3, type="l", col="blue")
+```

@@ -1,0 +1,74 @@
+---
+title: "Assignment 10"
+author: "Manisha Pendekar"
+date: "March 21, 2018"
+output: html_document
+---
+#1. Mental Health Clinics
+## 1a: Load data
+```{r echo=TRUE}
+library("ggplot2")
+library("dplyr")
+library("data.table")
+library("rvest")
+load("C:/Manisha/DDS/Week10/N-MHSS-2015-DS0001-data-r.rda")
+vec <- mh2015_puf$LST
+```
+## 1b: Please create code which lists the State abbreviations without their counts, one abbreviation per State value.
+```{r echo=TRUE}
+x <- unique(vec)
+x
+```
+## 1c: Create a listing of counts of these centers by state, including only mainland locations.
+```{r echo=TRUE}
+y <- c("AK", "HI", "AS", "GU", "MP", "PR", "VI")
+states <- mh2015_puf %>% filter(!trimws(as.character(LST)) %in% y)
+vaStatesDf <- states %>% group_by(LST) %>% summarise(FREQUENCY = n()) %>% data.frame()
+colnames(vaStatesDf)[1] <- "State"
+vaStatesDf
+```
+## 1d: Count of VA Medical Centers per mainland USA states Barchart
+```{r echo = TRUE}
+ggplot(data=vaStatesDf, aes(x=vaStatesDf$State, y= vaStatesDf$FREQUENCY, color = State , fill = State)) + 
+  geom_bar(stat="identity") + 
+  scale_fill_hue(l=40) +
+  xlab("States") + ylab("Count of VA medical centers") +
+  ggtitle("VA Medical Centers per mainland USA states") +
+  theme(plot.title=element_text(hjust = .5)) +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+#2. Cleaning and Bringing in New Features
+##2a: 
+```{r echo = TRUE}
+## The vector from question 1c before cleaning the spaces from the LST coulmn is VArecords. 
+##The spaces in the string elements of this vector is causing the problem when I  
+##tried to merge the data frames from mh2015_puf data and the data from statesize.csv. 
+statesize <- read.csv(file="C:\\Manisha\\DDS\\Week10\\Week10\\statesize.csv", header=TRUE, sep=",")
+colnames(statesize)[3] <- "State"
+merge(vaStatesDf, statesize, by="State", all = TRUE)
+```
+## 2b: Correct the problem with the LST column and merge the data from the two data frames
+```{r echo = TRUE}
+vaStatesDf$State = gsub(' ','',vaStatesDf$State)
+mergedVaPerState <-merge(vaStatesDf, statesize, by="State", all = TRUE)
+mergedVaPerState
+```
+## 2c: Calculate the VA hospitals per thousand square miles
+```{r echo = TRUE}
+mergedVaPerState$VAsPerThousandMiles <- mergedVaPerState$FREQUENCY/(mergedVaPerState$SqMiles/1000)
+head(mergedVaPerState, 10)
+```
+## 2d: VAs per square thousand miles barplot
+```{r echo = TRUE}
+ggplot(data = mergedVaPerState, aes(x= reorder(State, VAsPerThousandMiles), y=VAsPerThousandMiles, fill = Region)) +
+  geom_bar(stat="identity") + 
+  scale_fill_brewer(palette="Dark2") +
+  ggtitle("Density of VA Medical Centers Per Thousand Square Miles In Mainland USA States") + 
+  xlab("States") +
+  ylab("VA Medical Center's Density Per 1000 Sq Miles") +
+  theme(plot.title=element_text(hjust = .5)) +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+### 2e: What patterns do you see? By this metric, is there any region that seems relatively high for VA medical centers per thousand square miles? How about low? Given these data, what advice might you give your boss before you start modeling (and why)?
+## The Northeast region states has higher number of VA medical centers than the other regions. Also, the West region states has lower number of VA medical centers than the other regions.It seems to me that the Northeast region states are highly populated areas than the West and Midwest states. Thus, I will advice to my boss that we should also consider population density metrics per thousand miles within states and within the region before we start modeling. 
